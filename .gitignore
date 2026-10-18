@@ -16,3 +16,4 @@ data/
 !tests/**/*.csv
 work/
 .DS_Store
+!results/*.csv

@@ -12,16 +12,36 @@ Python tools, guidelines and a worked case study for **OBSCURA-Open-25**: an ope
 |---|---|
 | `Dataset` | Reads the tables, the chips (straight from the zip files), the targets and the attempted windows |
 | `validation` | Facility-grouped validation, and the comparison of a random split with a grouped split |
+| `diagnostics` | Fold-mean baseline, leave-one-facility-out, per-facility scores, and tests of whether a random split only recognises the facility |
 | `chips`, `chipstats` | Reflectance, cloud mask, true-colour and short-wave infrared views, summary numbers for each chip |
 | `observability` | Can the presence of a satellite reading be predicted for unseen facilities? |
 | `georef`, `verify` | Check that every chip sits at its facility, and that a download matches the published checksums |
-| `docs/GUIDELINES.md` | The rules that prevent the usual mistakes, each with code |
-| `docs/EVALUATION.md` | The case study: how much a random split overstates skill |
+| `qc` | The validation of the record: georeferencing, 14 consistency checks, coverage figure (`python -m obscura_open25 qc DATA`) |
+| `audit/rerun_check.py` | Re-runs the collection for random samples and compares with the record (needs the pipeline) |
+| `paper/` | The data note source, Figure 1 code, and `check_note.py` that ties the text to the computed numbers |
+| `references/` | The cited works with DOIs, and a tool to highlight the cited passages in the PDFs |
+| `results/` | Numbers computed by the code (`note_results.json`), per-facility scores, software versions, the stored re-run result |
+| `docs/` | Guidelines, file inventory, construction, selection, protocol, evaluation, validation, reproducibility (index: `docs/README.md`) |
 | `examples/reproduce_note.py` | Recomputes every number in the data note and compares it with the note |
 | `notebooks/quick_start.ipynb` | A guided tour with plots |
 
-The collection pipeline that built the data is not here. It will be released after the OBSCURA competition ends; udit/rerun_check.py needs it.
+The collection pipeline that built the data is not here. It will be released later; `audit/rerun_check.py` needs it.
+## Repository layout
 
+```
+src/obscura_open25/   the package: dataset, chips, chipstats, targets, validation, diagnostics,
+                      observability, georef, qc, verify (one concern per module)
+tests/                unit tests on a synthetic record; real-record tests when OBSCURA_OPEN25_DIR is set
+examples/             reproduce_note.py: recomputes every number in the data note
+paper/                the data note source, Figure 1 code, check_note.py
+audit/                rerun_check.py: re-run of the collection (needs the pipeline)
+results/              numbers computed by the code, environment versions, stored re-run result
+docs/                 guidelines, file inventory, construction, selection, protocol, evaluation, validation, reproducibility
+notebooks/ tools/     the quick-start notebook and the script that builds it
+references/           cited works with DOIs; tool to highlight cited passages in PDFs
+```
+
+The documentation index is [docs/README.md](docs/README.md).
 ## Install
 
 ```bash

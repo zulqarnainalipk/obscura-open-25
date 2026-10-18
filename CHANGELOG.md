@@ -9,7 +9,12 @@ Makes the validation and the data note reproducible from the repository.
 * `paper/`: the data note source, `make_figure.py` and `check_note.py`, which checks the text against the computed numbers.
 * `examples/reproduce_note.py` now writes `results/note_results.json` and covers every number in the note.
 * `references/`: list of cited works with DOIs and the tool to highlight cited passages.
-* `docs/VALIDATION.md`.
+* `diagnostics` module: fold-mean baseline, leave-one-facility-out, per-facility scores, facility-identity and elevation-and-slope-only models.
+* `docs/`: VALIDATION, PROTOCOL, CONSTRUCTION, SELECTION, FILES, REPRODUCIBILITY and an index; EVALUATION extended with the fold-mean baseline and the diagnostics.
+* `results/`: per-facility scores and the software versions of the run.
+* `diagnostics.bootstrap_understatement` (facility bootstrap, paired, against zero and against the training-fold mean), `fire_decomposition` (detection and brightness), `static_feature_identification`.
+* `docs/RELATED.md`; fire, resampling, quality-filter and missing-feature details in `docs/CONSTRUCTION.md`; baseline roles and bootstrap in `docs/PROTOCOL.md`.
+* Tests grew to 41.
 
 ## 1.1.0
 

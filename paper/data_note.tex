@@ -21,7 +21,7 @@
 $^{1}$ \quad Affiliation to be added; ORCID 0009-0009-0281-882X}
 \corres{Correspondence: zulqar445ali@gmail.com}
 
-\abstract{Satellites measure methane and related combustion gases above industrial sites, but few open datasets pair facility-scale imagery with several gas measurements, and models trained on them are usually validated with random splits. We present OBSCURA-Open-25: 1355 samples from 25 industrial facilities in 15 countries, each pairing a 14-layer Sentinel-2 image chip with Sentinel-5P methane, nitrogen dioxide and carbon monoxide enhancements, an aerosol index and a fire intensity, plus weather, terrain and spectral features and a record of all 1825 attempted observation windows. We also give usage guidelines and a Python package (obscura\_open25) with a facility-grouped validation protocol. In a case study on the released files, a random split understates the error for unseen facilities by 11\% to 38\%, and for fire it reverses the conclusion: the model beats a zero prediction under a random split (0.64 against 0.91) and loses to it under a grouped split (1.04). Only the aerosol index is clearly predictable for new facilities. Re-running the collection reproduced 15 of 15 sampled windows exactly. The data are released under CC BY 4.0.}
+\abstract{Few open datasets pair facility-scale satellite imagery with several co-measured gases, and models built on such data are usually validated with random splits. We release OBSCURA-Open-25: 1355 samples from 25 industrial facilities in 15 countries. Each sample pairs a 14-layer Sentinel-2 image chip with Sentinel-5P methane, nitrogen dioxide and carbon monoxide enhancements, an aerosol index and the maximum detected fire brightness temperature, plus weather, terrain and spectral features and a record of all 1825 attempted windows. A Python package gives access and a grouped-validation protocol. In a case study on the 25 selected facilities, random-split evaluation understates the error relative to facility-grouped evaluation by 11\% to 38\%. For methane and fire, a model using only elevation and slope reproduces the full model's random-split RMSE, consistent with facility recognition. Under a grouped split only the aerosol index is clearly better than the baselines. Re-running the collection reproduced 15 of 15 sampled windows. The targets are satellite products, not ground truth.}
 
 \keyword{Earth observation; Sentinel-2; Sentinel-5P; methane; industrial emissions; cross-validation; spatial leakage; open data}
 
@@ -29,76 +29,78 @@ $^{1}$ \quad Affiliation to be added; ORCID 0009-0009-0281-882X}
 
 \section{Summary}
 
-Sentinel-5P measures methane over the whole globe almost daily \cite{veefkind}, but a single facility changes the column by little compared with retrieval noise, and cloud or quality filters often remove the reading altogether. Nitrogen dioxide, carbon monoxide and aerosols come from the same burning and venting. Earlier open resources pair Sentinel-2 with Sentinel-5P for ground-level nitrogen dioxide \cite{scheibenreif} or label methane plumes at known super-emitters \cite{vaughan}. We know of none that offers facility-level chips with several gas targets and a record of every attempted observation.
+Sentinel-5P measures methane, nitrogen dioxide, carbon monoxide and aerosols almost daily worldwide \cite{veefkind}, but cloud and quality screening often remove the reading. Open benchmarks pair Sentinel-2 imagery with labelled methane sources \cite{zhu} or plumes \cite{vaughan,allen}, or with Sentinel-5P nitrogen dioxide \cite{scheibenreif}. To our knowledge none offers facility-level chips with several co-measured gases and a record of every attempted observation.
 
-This note contributes three things: the dataset, guidelines for using it, and a measured example of why the guidelines matter. The example is a validation protocol that holds out whole facilities, because rows from one facility resemble each other \cite{roberts}. All numbers below are computed from the files of the Zenodo record (doi:10.5281/zenodo.23450639) with the code at \url{https://github.com/zulqarnainalipk/obscura-open-25}; \texttt{examples/reproduce\_note.py} repeats them. The 25 facilities are a subset of a larger collection built for a public machine learning competition, whose remaining facilities will be released, with a separate descriptor, after it ends.
+The note offers the dataset with its window record, a Python package, and a validation protocol showing why whole facilities must be held out \cite{roberts}. All numbers come from the Zenodo record and the code at \url{https://github.com/zulqarnainalipk/obscura-open-25}.
 
 \section{Data Description}
 
-\textbf{Facilities and windows.} The facilities are refineries, gas plants, LNG terminals, oilfields, chemical sites, mines and a smelter in eight world regions (Figure~\ref{fig1}a). They were chosen for data quality: many samples, high gas availability, little cloud and all seasons covered. Each centre and image box (1.5 to 7.75 km) was checked by hand. Every second 5-day window from 1 January 2022 to 27 December 2023 was tried (1825). A window gives a sample if the least cloudy Sentinel-2 scene has at most 30\% cloud and at least one gas target exists: 1355 samples (74\%). A further 441 windows were too cloudy, 11 had no scene and 18 failed other checks. All attempts are listed.
+\textbf{Samples.} A facility has a fixed centre and a square image box (1.5 to 7.75 km), sized per facility and checked by hand against imagery. Every second 5-day window from 1 January 2022 to 27 December 2023 was tried (73 per facility, 1825 in all). In each window the Sentinel-2 date with the least cloud over the box is chosen. Sentinel-5P granules and FIRMS detections from one day before to one day after that date are paired with it. A window becomes a sample if the box has at most 30\% cloud and at least one gas target was measured: 1355 samples (74\%). The other 470 windows had too much cloud (441), no scene (11), or failed other checks (18). The 25 facilities (Figure~\ref{fig1}a) were selected with a quality score for samples, gas availability, cloud, seasons and box size (\texttt{docs/SELECTION.md}).
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{fig1.png}
-\caption{OBSCURA-Open-25. (\textbf{a}) The 25 facilities by group; marker size shows the number of samples. (\textbf{b}) True-colour chip of one sample (Yanbu complex, Saudi Arabia, 20 March 2023; side 6 km). (\textbf{c}) The same chip in short-wave infrared (B12, B11, B4), where a flare glows orange. (\textbf{d}) The five targets of this sample, in physical units and as z-scores.\label{fig1}}
+\caption{OBSCURA-Open-25. (\textbf{a}) The 25 facilities by group; marker size shows the number of samples. (\textbf{b}) True-colour chip of one sample (Yanbu, Saudi Arabia, 20 March 2023; B4, B3, B2). (\textbf{c}) The same chip in short-wave infrared (B12, B11, B4). (\textbf{d}) RMSE (z-score units) under a random split, a grouped split and predicting zero.\label{fig1}}
 \end{figure}
 
-\textbf{Chips.} Each chip is a $384\times384$ GeoTIFF with 14 layers: 12 Sentinel-2 Level-2A reflectance bands \cite{drusch}, the scene classification and the cloud probability. Pixels are 3.9 to 20.2 m, chips are not cloud-masked, and the grid carries a random offset below about 60 m.
+\textbf{Chips.} Each chip is a $384\times384$ GeoTIFF with 14 layers in this order: Sentinel-2 L2A bands B1 to B8, B8A, B9, B11, B12 (reflectance times 10,000) \cite{drusch}, the scene classification and the cloud probability. They are unsigned 16-bit with nodata 0, no cloud mask, a local UTM grid and pixels of 3.9 to 20.2 m. The grid origin is shifted by a random amount below 60 m in x and y, (chip centre to facility centre: median 48 m, largest 84 m).
 
-\textbf{Targets.} Gas targets are Sentinel-5P methane, nitrogen dioxide and carbon monoxide \cite{veefkind}, read through Google Earth Engine \cite{gorelick}. Each is the mean over a 10 km window minus the median of a land-only ring from 30 to 75 km \cite{carroll}, excluding areas near other facilities, and is paired with the Sentinel-2 scene within one day. The aerosol index is the window mean. Fire intensity is the hottest NASA FIRMS anomaly \cite{giglio}, or zero. Methane exists for 49\% of samples, the other gases for 99\%. A blank means not measured, not zero. Values come in physical units and as z-scores.
+\textbf{Targets.} Each gas enhancement is the mean of land pixels in a 10 km window minus the median of land pixels in a 30 to 75 km ring that leaves out areas near other facilities (land from MOD44W \cite{carroll}). Inputs are the Earth Engine Level-3 offline Sentinel-5P collections (1.1 km) \cite{veefkind,gorelick}: bias-corrected methane mixing ratio (ppb), tropospheric nitrogen dioxide column (\textmu mol\,m$^{-2}$) and carbon monoxide column (mmol\,m$^{-2}$). The quality filter is the collection's own; we added none. Granules of the paired days are averaged per pixel. The aerosol index (unitless, UV absorbing) is the window mean. Fire is the highest detected MODIS brightness temperature (T21, K) \cite{giglio} in the near-real-time FIRMS collection inside the 10 km window on the paired days (all confidence levels), and 0 when none was reported. Zero means no detection, not that no fire occurred (85\% of samples), so the value mixes detection and brightness. In an exploratory grouped analysis a classifier discriminated detection no better than chance (AUC 0.41, interval 0.27 to 0.53). Methane is present in 49\% of samples and the other gases in 99\%.
 
-\textbf{Features.} The 29 features are month, ERA5-Land weather \cite{munoz}, elevation and slope \cite{dem}, chip cloud share and 18 spectral indices.
+\textbf{Features.} The 29 features are month (sine, cosine), ERA5-Land weather \cite{munoz}, elevation and slope \cite{dem}, chip cloud share and 18 spectral indices. 
 
 \section{Data Records and Usage Guidelines}
 
-The record has 40 files (2.2 GB) under CC BY 4.0: tables of facilities, samples, features and attempted windows, 25 chip archives (one per facility), documentation and checksums. Source scene identifiers are given for every sample. Four rules apply.
+The record has 40 files (2.2 GB) under CC BY 4.0: tables, 25 chip archives, documentation and SHA-256 checksums. Rules:
 
 \begin{enumerate}[labelsep=2mm]
 \item Read \texttt{sample\_id} as text; four identifiers look like numbers.
 \item Fit and score each target only where it exists.
 \item Validate by facility, never by row.
-\item Remember that the sites are cleaner than typical ones and that chips are positioned to about 100 m.
 \end{enumerate}
 
-A minimal workflow:
+Install with \texttt{pip install -e ".[analysis]"} (Python 3.9 or newer); product identifiers, formulas and checks are in \texttt{docs/}. Workflow:
 {\footnotesize
 \begin{verbatim}
 from obscura_open25 import Dataset, compare_splits
-ds = Dataset("data")           # 25 sites, 1355 samples
-chip = ds.read_chip(ds.samples.sample_id.iloc[0])   # (14, 384, 384)
+ds = Dataset("data")
 print(compare_splits(ds).round(3))
 \end{verbatim}}
 
 \section{Case Study: Random Versus Facility-Grouped Validation}
 
-For each target, a gradient-boosted model on the 29 features was scored by five-fold cross-validation, once with random rows and once with whole facilities held out (five fold assignments each). Error is the RMSE in z-score units over measured samples; predicting zero is the reference (Table~\ref{tab1}).
+A scikit-learn gradient-boosting regressor (untuned, no preprocessing; settings in the repository) was fitted per target and fold on the 29 features. Grouped folds hold exactly five facilities, random folds random rows, and each split is repeated for five seeds (partitions). The error is the RMSE of the pooled out-of-fold predictions on the same measured rows, in z-score units, averaged over seeds; ``understated by'' is computed from unrounded values (the table shows rounded ones). The baselines are zero (a fixed reference: the constants in \texttt{scaling.json} were computed once, outside the folds, so they are not independent of the test folds) and the mean of the training folds, the primary baseline.
 
 \begin{table}[H]\centering
-\caption{RMSE (z-score units). Lower is better.\label{tab1}}
-\begin{tabular}{lcccc}
+\caption{RMSE (z-score units). Understated by $=1-\mathrm{random}/\mathrm{grouped}$ in percent, with 95\% percentile intervals from 2,000 paired facility resamples.\label{tab1}}
+\begin{tabular}{lccccc}
 \toprule
-\textbf{Target} & \textbf{Random} & \textbf{Grouped} & \textbf{Predict Zero} & \textbf{Understated By}\\
+\textbf{Target} & \textbf{Random} & \textbf{Grouped} & \textbf{Zero} & \textbf{Fold Mean} & \textbf{Understated By (Interval)}\\
 \midrule
-Methane & 0.89 & 1.00 & 0.98 & 11\%\\
-Nitrogen dioxide & 0.49 & 0.69 & 0.73 & 30\%\\
-Carbon monoxide & 0.67 & 0.75 & 0.75 & 11\%\\
-Aerosol index & 0.56 & 0.64 & 1.05 & 13\%\\
-Fire & 0.64 & 1.04 & 0.91 & 38\%\\
+Methane & 0.89 & 1.00 & 0.98 & 1.00 & 11 (5 to 17)\\
+Nitrogen dioxide & 0.49 & 0.69 & 0.73 & 0.71 & 30 (21 to 37)\\
+Carbon monoxide & 0.67 & 0.75 & 0.75 & 0.76 & 11 (7 to 16)\\
+Aerosol index & 0.56 & 0.64 & 1.05 & 1.02 & 13 (8 to 18)\\
+Fire & 0.64 & 1.04 & 0.91 & 0.93 & 38 (12 to 57)\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Every target looks better under a random split, probably because the model recognises a facility from its terrain and chip statistics and recalls its usual values (we did not test this directly). For fire the conclusion flips: a random split says the model beats a zero prediction, a grouped split says it does not. For unseen facilities only the aerosol index is clearly predictable, nitrogen dioxide is marginal, and methane and carbon monoxide show no gain. The spread over fold assignments was at most 0.034.
+Every target looks better under a random split. Under a grouped split only the aerosol index beats the training-fold mean with an interval that excludes zero (grouped minus fold-mean RMSE $-0.49$ to $-0.27$; intervals for all targets in \texttt{docs/EVALUATION.md}); for the other targets the interval includes zero, and nitrogen dioxide (0.69 against 0.71) is marginal. Fire reverses: the random split beats zero (0.64 against 0.91), the grouped split does not (1.04). The spread over seeds is at most 0.034 and reflects fold assignment only.
 
-We also asked whether a methane reading can be predicted to exist, using grouped folds. The area under the ROC curve was 0.63 from weather, 0.58 from chip statistics and 0.70 from all features, so missing methane is only weakly predictable and mostly site-specific. This is why the attempted-window table is provided.
+A model saw only elevation and slope, constant within a facility but taking only 17 distinct combinations over 25 facilities. Under a random split it matches the full model for methane (0.89 against 0.89) and fire (0.65 against 0.64); under a grouped split it is no better than the baselines (1.08 for both). A predictor using only the mean of the facility's own training rows (a diagnostic: it needs the facility in training) does as well or better for methane, carbon monoxide and fire (0.84, 0.65, 0.63). This is consistent with facility recognition but does not prove it.
 
 \section{Technical Validation}
 
-All files match their checksums and 1355 chips exist for 1355 samples. In all chips the facility centre lies inside the chip, and the chip centre is a median of 48 m (at most 84 m) from it. Fifteen samples at 15 facilities, some with blank targets, were rebuilt from the public archives with the documented procedure: all were identical in every field and pixel. This was a re-run of the same procedure, not an independent implementation. Fourteen consistency checks on value limits, dates, pixel counts and reasons for blanks passed. The satellite products were not compared with ground measurements, and small enhancements of either sign are mostly noise.
+All files match their SHA-256 checksums, and the 1355 samples and 1355 chips correspond one to one. Fourteen consistency checks passed. Fifteen samples at 15 facilities were rebuilt from the public archives; every numeric field, scene and granule identifier and chip pixel was identical. This repeats the same procedure; it is not independent and was not run for all samples.
+
+\section{Limitations and Intended Use}
+
+The targets are satellite proxies, not emission rates or ground concentrations. Enhancements near zero are mostly retrieval noise (45\% of methane values are negative). The 25 facilities were selected for quality; grouped evaluation tests transfer within this curated set, and cloudier or sparser sites may behave differently. The results concern one model and 25 facilities; they show a difference between validation schemes, not a general cause. Suited to generalisation research, not emission quantification. The main lesson: hold out whole facilities.
 
 \vspace{6pt}
 
-\authorcontributions{Conceptualization, methodology, software, validation, formal analysis, investigation, data curation, writing (original draft and review), and visualization: Z.A. The author has read and agreed to the published version of the manuscript.}
+\authorcontributions{Conceptualization, methodology, software, validation, analysis, data curation, writing and visualization: Z.A. The author has read and agreed to the published version of the manuscript.}
 
 \funding{This research received no external funding.}
 
@@ -132,6 +134,9 @@ Mu{\~n}oz-Sabater, J.; Dutra, E.; Agust{\'\i}-Panareda, A.; Albergel, C.; Arduin
 European Space Agency; Airbus. Copernicus Global Digital Elevation Model. 2022. doi:10.5270/ESA-c5d3d65.
 \bibitem[Roberts et~al.(2017)]{roberts}
 Roberts, D.R.; Bahn, V.; Ciuti, S.; Boyce, M.S.; Elith, J.; Guillera-Arroita, G.; Hauenstein, S.; Lahoz-Monfort, J.J.; Schr{\"o}der, B.; Thuiller, W.; et~al. Cross-Validation Strategies for Data with Temporal, Spatial, Hierarchical, or Phylogenetic Structure. {\em Ecography} {\bf 2017}, {\em 40}, 913--929. doi:10.1111/ecog.02881.
-\end{thebibliography}
+\bibitem[Zhu et~al.(2022)]{zhu}
+Zhu, B.; Lui, N.; Irvin, J.; Le, J.; Tadwalkar, S.; Wang, C.; Ouyang, Z.; Liu, F.Y.; Ng, A.Y.; Jackson, R.B. METER-ML: A Multi-Sensor Earth Observation Benchmark for Automated Methane Source Mapping. {\em arXiv} {\bf 2022}, arXiv:2207.11166.
+\bibitem[Allen et~al.(2025)]{allen}
+Allen, A.; Mateo-Garc{\'\i}a, G.; Irakulis-Loitxate, I.; et~al. Artificial Intelligence for Methane Detection: From Continuous Monitoring to Verified Mitigation. {\em arXiv} {\bf 2025}, arXiv:2511.21777.\end{thebibliography}
 
 \end{document}

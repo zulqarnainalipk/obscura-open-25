@@ -22,6 +22,8 @@ import pandas as pd
 
 from obscura_open25 import Dataset, availability_auc, chip_table, compare_splits, verify_folder
 from obscura_open25.observability import WEATHER
+from obscura_open25.diagnostics import (bootstrap_understatement, fire_decomposition, per_facility_table, readable, robustness,
+                                         static_feature_identification)
 from obscura_open25.qc import run_qc
 from obscura_open25.targets import TARGETS
 
@@ -29,6 +31,18 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
 EXPECTED = json.load(open(os.path.join(ROOT, "docs", "note_numbers.json"), encoding="utf-8"))
 RERUN = os.path.join(ROOT, "results", "rerun_check_results.json")
+
+
+def _environment():
+    """Versions of the software that produced the numbers (also written to results/environment.json)."""
+    import platform
+
+    import rasterio
+    import sklearn
+    env = {"python": platform.python_version(), "platform": platform.platform(), "numpy": np.__version__, "pandas": pd.__version__,
+           "rasterio": rasterio.__version__, "gdal": rasterio.__gdal_version__, "scikit-learn": sklearn.__version__}
+    json.dump(env, open(os.path.join(ROOT, "results", "environment.json"), "w", encoding="utf-8"), indent=1)
+    return 1
 
 
 def main(argv):
@@ -69,6 +83,36 @@ def main(argv):
         for col, src in (("random", "random"), ("grouped", "grouped"), ("predict_zero", "predict_zero")):
             got[f"{key}_{col}"] = round(float(row[src]), 2)
     got["max_fold_spread"] = round(max(v["grouped_sd"] for v in case.values()), 3)
+    share = s.groupby("site_id").t_ch4.apply(lambda x: x.notna().mean())
+    got["ch4_site_share_min_percent"], got["ch4_site_share_max_percent"] = round(100 * share.min()), round(100 * share.max())
+    month = pd.to_datetime(s.s2_date).dt.month
+    season = s.t_ch4.notna().groupby(month.map(lambda m: (m % 12) // 3)).mean()      # 0 = Dec-Feb, 1 = Mar-May, 2 = Jun-Aug, 3 = Sep-Nov
+    got["ch4_season_share_min_percent"], got["ch4_season_share_max_percent"] = round(100 * season.min()), round(100 * season.max())
+    tercile = pd.qcut(s.s2_cloud_frac, 3, labels=False, duplicates="drop")
+    by_cloud = s.t_ch4.notna().groupby(tercile).mean()
+    got["ch4_clearest_third_percent"], got["ch4_cloudiest_third_percent"] = round(100 * by_cloud.iloc[0]), round(100 * by_cloud.iloc[-1])
+    got["ch4_negative_percent"] = round(100 * (s.raw_ch4.dropna() < 0).mean())
+    got["fire_zero_percent"] = round(100 * (s.raw_firms == 0).mean())
+    got["windows_per_site"] = int(w.groupby("site_id").size().iloc[0])
+    got["pair_days_max"] = int(s.pair_days.max())
+    rob = robustness(ds)
+    print(readable(rob).round(3).T.to_string())
+    for key, v in rob.items():
+        for k, x in v.items():
+            if not isinstance(x, list):
+                got[f"rob_{key}_{k}"] = round(x, 2) if isinstance(x, float) else x
+    os.makedirs(os.path.join(ROOT, "results"), exist_ok=True)
+    per_facility_table(ds).round(4).to_csv(os.path.join(ROOT, "results", "per_facility_scores.csv"), index=False)
+    n_sites, distinct, constant = static_feature_identification(ds)
+    got["static_distinct_combinations"], got["static_constant_within_facility"] = distinct, int(constant)
+    boot = bootstrap_understatement(ds)
+    for key, v in boot.items():
+        for k, x in v.items():
+            got[f"boot_{key}_{k}"] = round(x, 3)
+    fire = fire_decomposition(ds)
+    for k, x in fire.items():
+        got[f"fire_{k}"] = round(x, 3) if isinstance(x, float) else x
+    _environment()
 
     if not quick:
         qc = run_qc(ds, signal=False)
@@ -92,7 +136,7 @@ def main(argv):
         got["rerun_identical"] = sum(1 for r in rr if r["status"] == "ok" and not r.get("field_differences") and r.get("chip_identical"))
 
     os.makedirs(os.path.dirname(out), exist_ok=True)
-    json.dump({"numbers": got, "case_study": case}, open(out, "w", encoding="utf-8"), indent=1)
+    json.dump({"numbers": got, "case_study": case, "robustness": rob, "bootstrap": boot, "fire": fire}, open(out, "w", encoding="utf-8"), indent=1)
     print(f"\nwrote {out}")
 
     bad = 0

@@ -22,7 +22,7 @@ from obscura_open25 import masked_rmse
 masked_rmse(truth, prediction)        # ignores NaN truths
 ```
 
-Methane is blank for about half of the samples, nitrogen dioxide and carbon monoxide for about one percent, the aerosol index and fire intensity for none. Fire intensity with no detection is a real low value.
+Methane is blank for about half of the samples, nitrogen dioxide and carbon monoxide for about one percent, the aerosol index and fire intensity for none. Fire is 0 when FIRMS detected nothing. That cannot be told apart from a fire that was missed (small, short or under cloud), so treat 0 as no detection and not as a measured low temperature.
 
 ## 3. Know which scale you are on
 
@@ -34,7 +34,7 @@ Gas values are enhancements: the average over a 10 km window around the facility
 
 ## 4. Validate by facility, not by row
 
-Rows from one facility resemble each other. A random split lets a model recognise the facility, and the error looks much better than it will on a new facility. In this dataset a random split understates the error of a small model by 11 to 38 percent, and for fire it reverses the conclusion (see [EVALUATION.md](EVALUATION.md)).
+Rows from one facility resemble each other. A random split lets a model recognise the facility, and the error looks much better than it will on a new facility. Compare against a baseline fitted on the training folds as well as against zero (see [PROTOCOL.md](PROTOCOL.md)). In this dataset a random split understates the error of a small model by 11 to 38 percent, and for fire it reverses the conclusion (see [EVALUATION.md](EVALUATION.md)).
 
 ```python
 from obscura_open25 import grouped_folds, cv_predictions
