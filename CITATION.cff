@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software or the dataset it reads, please cite both as described below."
+type: software
+title: "obscura-open25: tools for reading OBSCURA-Open-25"
+version: "1.0.0"
+authors:
+  - family-names: "Ali"
+    given-names: "Zulqarnain"
+    orcid: "https://orcid.org/0009-0009-0281-882X"
+license: MIT
+repository-code: "[GITHUB REPOSITORY URL]"
+abstract: "A small Python package and quick-start notebook for reading OBSCURA-Open-25, an open dataset of Sentinel-2 image chips paired with Sentinel-5P methane, NO2, CO, aerosol and fire targets at 25 industrial facilities."
+keywords:
+  - Earth observation
+  - Sentinel-2
+  - Sentinel-5P
+  - dataset
+references:
+  - type: dataset
+    title: "OBSCURA-Open-25: Sentinel-2 image chips paired with Sentinel-5P methane, NO2, CO, aerosol and fire targets at 25 industrial facilities"
+    authors:
+      - family-names: "Ali"
+        given-names: "Zulqarnain"
+    doi: "[ZENODO DOI]"
+    publisher:
+      name: "Zenodo"

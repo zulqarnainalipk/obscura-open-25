@@ -1,0 +1,10 @@
+{
+  "title": "obscura-open25: tools for reading OBSCURA-Open-25",
+  "upload_type": "software",
+  "description": "<p>A small Python package and quick-start notebook for reading OBSCURA-Open-25, an open dataset of Sentinel-2 image chips paired with Sentinel-5P methane, NO2, CO, aerosol and fire targets at 25 industrial facilities. The dataset itself is archived separately on Zenodo.</p>",
+  "creators": [
+    {"name": "Ali, Zulqarnain", "orcid": "0009-0009-0281-882X"}
+  ],
+  "license": "MIT",
+  "keywords": ["Earth observation", "Sentinel-2", "Sentinel-5P", "dataset", "Python"]
+}
