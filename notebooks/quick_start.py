@@ -5,7 +5,7 @@
 # It uses the `obscura_open25` package from this repository.
 #
 # **Get the data first.** Download the files of the Zenodo record into one folder and set `OBSCURA_OPEN25_DIR` to it
-# (or put them in a folder called `data` next to this notebook). The record is at https://doi.org/[ZENODO DOI].
+# (or put them in a folder called `data` next to this notebook). The record is at https://doi.org/10.5281/zenodo.23450639.
 #
 # **What is in the data.** 1,355 samples from 25 industrial facilities. Each sample is one facility over one
 # 5-day window: a 14-layer Sentinel-2 chip, 29 weather, terrain and spectral features, and five satellite-derived
@@ -160,34 +160,54 @@ chip = show_sample(ds, row.sample_id)
 print("chip shape:", chip.shape, "| cloud-free share:", round(float(valid_mask(chip).mean()), 2))
 
 # %% [markdown]
-# ## A first model
+# ## Evaluate correctly: random split against facility-grouped split
 #
-# A small model on the 29 tabular features, checked the honest way: every site is either in the fitting part or in the
-# checking part, never both. `masked_rmse` ignores blank targets. Predicting zero scores about 1.0 because the targets are
-# z-scores, so anything lower means the model learned something that carries over to new sites.
-#
-# This is only a demonstration. With 25 sites the numbers are noisy.
+# The most common mistake with this kind of data is to check a model on random rows. Rows from one facility resemble
+# each other, so the model recognises the facility and the error looks better than it will on a new one.
+# `compare_splits` fits a small model for each target and measures its error two ways: on random folds, and on folds
+# in which every facility is entirely on one side. Predicting zero (the training mean) is the reference, because the
+# targets are z-scores. See `docs/EVALUATION.md` for the full discussion.
 
 # %%
-def grouped_cv(ds, target, n_folds=5):
-    """Out-of-fold RMSE of a small gradient-boosted model, with sites kept apart."""
-    from sklearn.ensemble import HistGradientBoostingRegressor
-    from sklearn.model_selection import GroupKFold
+from obscura_open25 import compare_splits
 
-    data = ds.merged()
-    cols = [c for c in ds.features.columns if c != "sample_id" and c in data.columns]
-    X, y, groups = data[cols].to_numpy("float32"), data[target], data.site_id.to_numpy()
-    pred = np.full(len(data), np.nan)
-    for fit, check in GroupKFold(n_folds).split(X, groups=groups):
-        keep = y.iloc[fit].notna().to_numpy()
-        model = HistGradientBoostingRegressor(max_iter=100, learning_rate=0.06, max_depth=3, min_samples_leaf=20, random_state=0)
-        pred[check] = model.fit(X[fit][keep], y.iloc[fit][keep]).predict(X[check])
-    return masked_rmse(y, pred), masked_rmse(y, np.zeros(len(y)))
+comparison = compare_splits(ds)
+comparison.round(3)
+
+# %%
+def plot_comparison(comparison):
+    """Random split, grouped split and predict-zero error for each target."""
+    x = np.arange(len(comparison))
+    fig, ax = plt.subplots(figsize=(7, 3.2))
+    ax.bar(x - 0.27, comparison.random, 0.27, color=GREY, label="random split")
+    ax.bar(x, comparison.grouped, 0.27, color=MAIN, yerr=comparison.grouped_sd, capsize=2, label="facility-grouped split")
+    ax.bar(x + 0.27, comparison.predict_zero, 0.27, color="#E08A1E", label="predict zero")
+    ax.set_xticks(x); ax.set_xticklabels(comparison.index, fontsize=8)
+    ax.set_ylabel("RMSE (z-score units)"); ax.legend(frameon=False, fontsize=8)
+    ax.set_title("A random split flatters every target", loc="left", fontweight="bold")
+    plt.tight_layout(); plt.show()
 
 
-rows = {NAMES[t]: dict(zip(["model", "predict zero"], grouped_cv(ds, t))) for t in TARGETS}
-pd.DataFrame(rows).T.round(3)
+plot_comparison(comparison)
 
+# %% [markdown]
+# Read it like this. Where the grouped bar is below the predict-zero bar, the model has learned something that carries
+# over to new facilities (the aerosol index clearly, nitrogen dioxide a little). Where the random bar is below
+# predict-zero but the grouped bar is not, the model only recognised the facility (fire, here).
+#
+# The same idea answers a second question: can we tell in advance whether a methane reading will exist for a sample?
+
+# %%
+from obscura_open25 import availability_auc, chip_table
+from obscura_open25.observability import WEATHER
+
+surface = chip_table(ds, cache="surface_stats.csv")                      # reads each chip once, then caches
+feats = ds.features.set_index("sample_id").loc[ds.samples.sample_id]
+present = ds.samples.t_ch4.notna().astype(int).to_numpy()
+groups = ds.samples.site_id.to_numpy()
+pd.Series({"weather only": availability_auc(feats[WEATHER].to_numpy(), present, groups),
+           "chip surface statistics only": availability_auc(surface.iloc[:, 1:9].to_numpy(), present, groups)},
+          name="area under the ROC curve (0.5 is chance)").round(2)
 # %% [markdown]
 # ## Where to go next
 #

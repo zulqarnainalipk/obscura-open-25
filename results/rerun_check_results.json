@@ -1,0 +1,122 @@
+[
+ {
+  "sample_id": "e938b268c175afda",
+  "site_id": "rumaila_oilfield",
+  "window_start": "2023-07-25",
+  "status": "ok",
+  "field_differences": [],
+  "chip_identical": true
+ },
+ {
+  "sample_id": "f6427ab2eb93422a",
+  "site_id": "karamay_oilfield",
+  "window_start": "2023-05-06",
+  "status": "ok",
+  "field_differences": [],
+  "chip_identical": true
+ },
+ {
+  "sample_id": "335e7543f1afb1f6",
+  "site_id": "shymkent_refinery",
+  "window_start": "2023-04-16",
+  "status": "ok",
+  "field_differences": [],
+  "chip_identical": true
+ },
+ {
+  "sample_id": "fe298d8070b79493",
+  "site_id": "jorf_lasfar_morocco",
+  "window_start": "2022-07-10",
+  "status": "ok",
+  "field_differences": [],
+  "chip_identical": true
+ },
+ {
+  "sample_id": "f94aa19ee40bc89c",
+  "site_id": "refap_canoas",
+  "window_start": "2023-12-22",
+  "status": "ok",
+  "field_differences": [],
+  "chip_identical": true
+ },
+ {
+  "sample_id": "5d7840ac58b29c78",
+  "site_id": "powder_river_basin_coal",
+  "window_start": "2022-10-08",
+  "status": "ok",
+  "field_differences": [],
+  "chip_identical": true
+ },
+ {
+  "sample_id": "070aef3637f4e889",
+  "site_id": "moomba_gas_plant",
+  "window_start": "2022-08-19",
+  "status": "ok",
+  "field_differences": [],
+  "chip_identical": true
+ },
+ {
+  "sample_id": "7fa988bbad486811",
+  "site_id": "fadhili_gas_plant",
+  "window_start": "2023-09-03",
+  "status": "ok",
+  "field_differences": [],
+  "chip_identical": true
+ },
+ {
+  "sample_id": "b8336ebfe78a6013",
+  "site_id": "tarragona_petrochem",
+  "window_start": "2022-05-01",
+  "status": "ok",
+  "field_differences": [],
+  "chip_identical": true
+ },
+ {
+  "sample_id": "a337e7610ca28a12",
+  "site_id": "shaybah_processing",
+  "window_start": "2023-09-03",
+  "status": "ok",
+  "field_differences": [],
+  "chip_identical": true
+ },
+ {
+  "sample_id": "81389af52795bca8",
+  "site_id": "marsa_el_brega_lng",
+  "window_start": "2023-01-26",
+  "status": "ok",
+  "field_differences": [],
+  "chip_identical": true
+ },
+ {
+  "sample_id": "f79acc7270dabbbc",
+  "site_id": "la_plata_refinery_argentina",
+  "window_start": "2022-04-11",
+  "status": "ok",
+  "field_differences": [],
+  "chip_identical": true
+ },
+ {
+  "sample_id": "e0399064904d4f5a",
+  "site_id": "gabes_chemical_tunisia",
+  "window_start": "2022-01-01",
+  "status": "ok",
+  "field_differences": [],
+  "chip_identical": true
+ },
+ {
+  "sample_id": "a8fd45186272e980",
+  "site_id": "yanbu_refining_complex",
+  "window_start": "2022-11-17",
+  "status": "ok",
+  "field_differences": [],
+  "chip_identical": true
+ },
+ {
+  "sample_id": "4013b458d3e7d168",
+  "site_id": "ras_lanuf_refinery",
+  "window_start": "2022-01-31",
+  "status": "ok",
+  "field_differences": [],
+  "chip_identical": true
+ }
+]

@@ -1,0 +1,86 @@
+{
+ "numbers": {
+  "facilities": 25,
+  "samples": 1355,
+  "countries": 15,
+  "regions": 8,
+  "facility_types": 12,
+  "windows_attempted": 1825,
+  "windows_cloudy": 441,
+  "windows_no_scene": 11,
+  "windows_other_failed": 18,
+  "share_samples_percent": 74,
+  "methane_present_percent": 49,
+  "no2_present_percent": 99,
+  "co_present_percent": 99,
+  "box_km_min": 1.5,
+  "box_km_max": 7.75,
+  "pixel_m_min": 3.9,
+  "pixel_m_max": 20.2,
+  "download_problems": 0,
+  "files_in_record": 40,
+  "record_gb": 2.2,
+  "chip_archives": 25,
+  "n_features": 29,
+  "numeric_looking_ids": 4,
+  "t_ch4_random": 0.89,
+  "t_ch4_grouped": 1.0,
+  "t_ch4_predict_zero": 0.98,
+  "t_no2_random": 0.49,
+  "t_no2_grouped": 0.69,
+  "t_no2_predict_zero": 0.73,
+  "t_co_random": 0.67,
+  "t_co_grouped": 0.75,
+  "t_co_predict_zero": 0.75,
+  "t_aai_random": 0.56,
+  "t_aai_grouped": 0.64,
+  "t_aai_predict_zero": 1.05,
+  "t_firms_random": 0.64,
+  "t_firms_grouped": 1.04,
+  "t_firms_predict_zero": 0.91,
+  "max_fold_spread": 0.034,
+  "chips_facility_inside": 1355,
+  "georef_median_m": 48,
+  "georef_max_m": 84,
+  "consistency_checks_total": 14,
+  "consistency_checks_passed": 14,
+  "qc_issues": 0,
+  "availability_auc_weather": 0.63,
+  "availability_auc_chip": 0.58,
+  "availability_auc_all": 0.7,
+  "rerun_total": 15,
+  "rerun_identical": 15
+ },
+ "case_study": {
+  "t_ch4": {
+   "random": 0.8881780089654141,
+   "grouped": 1.001382192256127,
+   "grouped_sd": 0.014109009601985823,
+   "zero": 0.9846098642140684
+  },
+  "t_no2": {
+   "random": 0.4886716048169545,
+   "grouped": 0.6942605963071831,
+   "grouped_sd": 0.03376011298632875,
+   "zero": 0.7310879686538739
+  },
+  "t_co": {
+   "random": 0.669588754203469,
+   "grouped": 0.749830398240887,
+   "grouped_sd": 0.00758564143878939,
+   "zero": 0.7501683943596033
+  },
+  "t_aai": {
+   "random": 0.5565781891278039,
+   "grouped": 0.6422382775493019,
+   "grouped_sd": 0.004071142424456514,
+   "zero": 1.0514984272149075
+  },
+  "t_firms": {
+   "random": 0.64494358699448,
+   "grouped": 1.0420307287154678,
+   "grouped_sd": 0.012382100295203962,
+   "zero": 0.9090596463326297
+  }
+ }
+}

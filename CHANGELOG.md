@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.2.0
+
+Makes the validation and the data note reproducible from the repository.
+
+* `qc` module and `python -m obscura_open25 qc`: georeferencing, 14 consistency checks, value ranges, coverage figure.
+* `audit/rerun_check.py` and `results/rerun_check_results.json`: the re-run of the collection (15 of 15 identical).
+* `paper/`: the data note source, `make_figure.py` and `check_note.py`, which checks the text against the computed numbers.
+* `examples/reproduce_note.py` now writes `results/note_results.json` and covers every number in the note.
+* `references/`: list of cited works with DOIs and the tool to highlight cited passages.
+* `docs/VALIDATION.md`.
+
+## 1.1.0
+
+Adds the evaluation tools and documentation behind the data note.
+
+* `validation`: `grouped_folds`, `random_folds`, `cv_predictions`, `compare_splits` and `compare_splits_arrays` (random split against facility-grouped split).
+* `observability`: `availability_auc` for predicting whether a satellite reading exists.
+* `chipstats`: `surface_stats`, `chip_summary` and `chip_table` (cached).
+* `georef`: `georeference_offsets` checks every chip against its facility.
+* `examples/reproduce_note.py` and `docs/note_numbers.json` reproduce every number in the data note.
+* `docs/GUIDELINES.md` and `docs/EVALUATION.md`; README and quick-start notebook rewritten around them.
+* `CONTRIBUTING.md`. Tests grew from 21 to 33.
+
 ## 1.0.0
 
 First release, matching version 1.0.0 of the dataset.

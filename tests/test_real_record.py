@@ -19,3 +19,12 @@ def test_real_record_chip_layout():
     ds = Dataset(FOLDER)
     chip, meta = ds.read_chip_with_meta(ds.samples.sample_id.iloc[0])
     assert chip.shape == (14, 384, 384) and meta["crs"] is not None
+
+
+def test_real_record_validation_passes():
+    from obscura_open25.qc import run_qc
+
+    result = run_qc(Dataset(FOLDER), signal=False)
+    assert result["issues"] == []
+    assert len(result["checks"]) == 14 and all(result["checks"].values())
+    assert result["georef"]["n"] == 1355 and result["georef"]["site_inside_chip"] == 1355

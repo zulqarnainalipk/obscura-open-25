@@ -1,79 +1,92 @@
 # obscura-open25
 
-Python tools and a quick-start notebook for **OBSCURA-Open-25**: an open dataset of 1,355 samples from 25 industrial facilities. Each sample pairs a 14-layer Sentinel-2 image chip with five satellite-derived targets (methane, NO2 and CO enhancements, an aerosol index, fire intensity), plus weather, terrain and spectral features.
+Python tools, guidelines and a worked case study for **OBSCURA-Open-25**: an open dataset of 1,355 samples from 25 industrial facilities. Each sample pairs a 14-layer Sentinel-2 image chip with five satellite-derived targets (methane, NO2 and CO enhancements, an aerosol index, fire intensity), plus weather, terrain and spectral features.
 
-* **Dataset (Zenodo):** https://doi.org/[ZENODO DOI]. This repository holds no data; download the files from Zenodo.
-* **Description of the dataset:** the data note [DATA NOTE DOI OR URL].
+* **Dataset (Zenodo):** https://doi.org/10.5281/zenodo.23450639. This repository holds no data; download the files from Zenodo.
+* **Data note:** [DATA NOTE DOI OR URL]. This repository is the code behind it. Every number in the note is computed from the Zenodo files and can be reproduced with `examples/reproduce_note.py`.
 * **Licences:** code MIT (this repository). Data CC BY 4.0 (Zenodo record). Source attributions are in `NOTICE.md` of the record.
 
-## What the package does
+## What is here
 
-* Reads the tables, the chips (straight from the zip files) and the targets.
-* Gives each sample's image as an array, with helpers for reflectance, the cloud mask, true-colour and short-wave infrared views.
-* Converts z-scored targets back to physical values.
-* Checks your download against the published checksums.
+| Part | What it does |
+|---|---|
+| `Dataset` | Reads the tables, the chips (straight from the zip files), the targets and the attempted windows |
+| `validation` | Facility-grouped validation, and the comparison of a random split with a grouped split |
+| `chips`, `chipstats` | Reflectance, cloud mask, true-colour and short-wave infrared views, summary numbers for each chip |
+| `observability` | Can the presence of a satellite reading be predicted for unseen facilities? |
+| `georef`, `verify` | Check that every chip sits at its facility, and that a download matches the published checksums |
+| `docs/GUIDELINES.md` | The rules that prevent the usual mistakes, each with code |
+| `docs/EVALUATION.md` | The case study: how much a random split overstates skill |
+| `examples/reproduce_note.py` | Recomputes every number in the data note and compares it with the note |
+| `notebooks/quick_start.ipynb` | A guided tour with plots |
 
-It does not contain the collection pipeline. The pipeline that built the data will be released after the OBSCURA competition ends ([KAGGLE COMPETITION URL]).
+The collection pipeline that built the data is not here. It will be released after the OBSCURA competition ends; udit/rerun_check.py needs it.
 
 ## Install
 
 ```bash
-git clone [GITHUB REPOSITORY URL]
+git clone https://github.com/zulqarnainalipk/obscura-open-25
 cd obscura-open-25
-pip install -e ".[notebook]"
+pip install -e ".[analysis]"          # numpy, pandas, rasterio and scikit-learn
+pip install -e ".[notebook]"          # adds matplotlib and jupyter
 ```
 
-Python 3.9 or newer. The package needs `numpy`, `pandas` and `rasterio`. The `notebook` extra adds `matplotlib`, `scikit-learn` and `jupyter`.
+Python 3.9 or newer.
 
-## Get the data
+## Get the data and check it
 
-Download all files of the Zenodo record into one folder, for example `data/`. Keep the zip files as they are.
+Download all files of the Zenodo record into one folder, for example `data/`, and keep the zip files as they are.
 
 ```bash
-python -m obscura_open25 verify data            # check every file against SHA256SUMS.txt
-python -m obscura_open25 verify data --chips 50 # same, but open only 50 random chips
+python -m obscura_open25 verify data              # every file against SHA256SUMS.txt
+python -m obscura_open25 verify data --chips 50   # also open 50 random chips and check their hashes
 ```
 
 ## Quick start
 
 ```python
-from obscura_open25 import Dataset, true_colour, swir_composite
+from obscura_open25 import Dataset, compare_splits, true_colour
 
-ds = Dataset("data")
-print(ds)                                     # Dataset(25 sites, 1355 samples, ...)
+ds = Dataset("data")                            # Dataset(25 sites, 1355 samples, ...)
+chip = ds.read_chip(ds.samples.sample_id.iloc[0])   # array (14, 384, 384), unsigned 16-bit
+rgb = true_colour(chip)                         # (384, 384, 3) image in 0..1
 
-row = ds.samples.iloc[0]
-chip = ds.read_chip(row.sample_id)            # array (14, 384, 384), unsigned 16-bit
-rgb = true_colour(chip)                       # (384, 384, 3) image in 0..1
-
-table = ds.merged()                           # samples + site columns + features, one row per sample
+table = ds.merged()                             # samples + site columns + features, one row per sample
+print(compare_splits(ds).round(3))              # random split against facility-grouped split, five targets
 ```
 
-Read `sample_id` as text. A few identifiers look like numbers (for example `5e42214447929041`), and `Dataset` keeps them as strings. If you read the csv files yourself, use `dtype={"sample_id": str}`.
+Read `sample_id` as text. Four identifiers look like numbers (for example `5e42214447929041`), and `Dataset` keeps them as strings. If you read the csv files yourself, use `dtype={"sample_id": str}`.
 
-The notebook `notebooks/quick_start.ipynb` walks through the sites, the windows that gave no sample, the targets, a site time series, an image chip, and a small model checked with site-grouped cross-validation.
+## Guidelines in short
 
-## Main pieces
+1. Identifiers are text.
+2. A blank target is not a zero. Fit and score each target on the rows where it exists.
+3. `t_*` are z-scores, `raw_*` are physical values (ppb, micromol/m2, mmol/m2, index, kelvin).
+4. **Validate by facility, not by row.** A random split understates the error by 11 to 38 percent here, and for fire it reverses the conclusion.
+5. Chips are not cloud-masked, and their positions are accurate to about 100 m.
+6. The 25 facilities were chosen for data quality: they are clearer and better covered than typical.
 
-| Piece | What it does |
-|---|---|
-| `Dataset(folder)` | `.sites`, `.samples`, `.features`, `.windows`, `.scaling`; `.read_chip(id)`, `.read_chip_with_meta(id)`, `.iter_chips(site_id)`, `.merged(precise=False)`, `.targets(physical=False)`, `.verify()` |
-| `verify_folder(folder)` | Checks files against `SHA256SUMS.txt`, tables against each other, chips against their hashes |
-| `reflectance`, `scene_class`, `valid_mask`, `true_colour`, `swir_composite`, `ndvi` | Chip helpers |
-| `to_zscore`, `to_physical`, `fire_kelvin`, `masked_rmse` | Target helpers |
+The full list, with code, is in [docs/GUIDELINES.md](docs/GUIDELINES.md).
 
-## A note on the targets
+## Reproduce the data note
 
-`t_*` columns are z-scores with constants from the whole OBSCURA training set (`scaling.json` in the record). `raw_*` columns hold physical values: ppb, micromol/m2, mmol/m2, an index, and kelvin. A blank target means the satellite could not measure it, which is not a zero. Small enhancements of either sign are mostly retrieval noise.
+```bash
+python examples/reproduce_note.py data           # every number, from the Zenodo files; writes results/note_results.json
+python paper/make_figure.py data                 # redraws Figure 1
+python paper/check_note.py                       # the note's text against those numbers, and the journal limits
+python -m obscura_open25 qc data --out qc_out    # the validation of the record
+```
 
+`reproduce_note.py` prints each computed value next to the value the note was written with and exits with an error if any differs. `check_note.py` then fails if a number in `paper/data_note.tex` is not the number the code computed, or if the note exceeds 1,500 words, one figure or 12 references. The one result the code cannot recompute here is the re-run of the collection (15 of 15 samples identical), which needs Earth Engine and the pipeline; its stored outcome is `results/rerun_check_results.json`. See `docs/VALIDATION.md`.
 ## Tests
 
 ```bash
 pip install -e ".[test]"
-python -m pytest -q
+python -m pytest -q                              # unit tests on a tiny synthetic record, no download needed
+OBSCURA_OPEN25_DIR=data python -m pytest -q      # also runs the checks on the real Zenodo files
 ```
 
-The tests build a tiny synthetic record, so they need no download. To also run the checks against the real record, set `OBSCURA_OPEN25_DIR` to the folder with the Zenodo files first.
+The synthetic record only checks that the code does what it says. The checks on the real files, and every number in the note, use the real Zenodo files. Without `OBSCURA_OPEN25_DIR` the two real-data tests are skipped.
 
 ## Cite
 
@@ -81,4 +94,4 @@ Please cite the dataset (see the Zenodo record) and, if you use the code, this r
 
 ## Author
 
-Zulqarnain Ali, ORCID [0009-0009-0281-882X](https://orcid.org/0009-0009-0281-882X).
+Zulqarnain Ali, ORCID [0009-0009-0281-882X](https://orcid.org/0009-0009-0281-882X). Issues and suggestions are welcome on GitHub; see `CONTRIBUTING.md`.

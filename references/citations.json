@@ -1,0 +1,12 @@
+{
+ "veefkind":     {"doi": "10.1016/j.rse.2011.09.027", "cited_in": ["Summary", "Data Description: Targets"], "supports": "Sentinel-5P/TROPOMI measures methane (and NO2, CO, UV aerosol index) with near-daily global coverage", "highlight_phrases": []},
+ "scheibenreif": {"doi": "10.1109/TGRS.2022.3160827", "cited_in": ["Summary"], "supports": "earlier open resource pairing Sentinel-2 with Sentinel-5P for ground-level NO2", "highlight_phrases": []},
+ "vaughan":      {"doi": "10.5194/amt-17-2583-2024", "cited_in": ["Summary"], "supports": "labelled methane plumes at known super-emitters with Sentinel-2", "highlight_phrases": []},
+ "drusch":       {"doi": "10.1016/j.rse.2011.11.026", "cited_in": ["Data Description: Chips"], "supports": "Sentinel-2 mission and its multispectral bands", "highlight_phrases": []},
+ "giglio":       {"doi": "10.1016/j.rse.2016.02.054", "cited_in": ["Data Description: Targets"], "supports": "thermal anomaly (active fire) detection and the brightness temperature behind the FIRMS values", "highlight_phrases": []},
+ "gorelick":     {"doi": "10.1016/j.rse.2017.06.031", "cited_in": ["Data Description: Targets"], "supports": "Google Earth Engine as the platform used to read the satellite products", "highlight_phrases": []},
+ "carroll":      {"doi": "10.1080/17538940902951401", "cited_in": ["Data Description: Targets"], "supports": "global water mask used to keep land pixels only in the background ring", "highlight_phrases": []},
+ "munoz":        {"doi": "10.5194/essd-13-4349-2021", "cited_in": ["Data Description: Features"], "supports": "ERA5-Land weather variables", "highlight_phrases": []},
+ "dem":          {"doi": "10.5270/ESA-c5d3d65", "cited_in": ["Data Description: Features"], "supports": "Copernicus 30 m elevation model (a dataset, not a paper)", "highlight_phrases": []},
+ "roberts":      {"doi": "10.1111/ecog.02881", "cited_in": ["Summary"], "supports": "cross-validation must respect structure (spatial, hierarchical) in the data, otherwise error is understated", "highlight_phrases": []}
+}
